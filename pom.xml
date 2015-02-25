@@ -28,7 +28,7 @@
 	<properties>
 		<!-- Prevent the plugin from being copied to ./plugins/ by default -->
 		<imagej.app.directory>path/to/Fiji.app/</imagej.app.directory>
-		<bio-formats.version>5.0.6</bio-formats.version>
+		<bio-formats.version>5.1.0-SNAPSHOT</bio-formats.version>
 	</properties>
 
 	<dependencies>
@@ -103,6 +103,12 @@
 		<dependency>
 			<groupId>ome</groupId>
 			<artifactId>formats-gpl</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>ch.systems.cisd</groupId>
+					<artifactId>jhdf5</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>ome</groupId>
