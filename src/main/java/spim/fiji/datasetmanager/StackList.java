@@ -50,7 +50,7 @@ import spim.fiji.spimdata.boundingbox.BoundingBoxes;
 import spim.fiji.spimdata.imgloaders.StackImgLoader;
 import spim.fiji.spimdata.interestpoints.ViewInterestPoints;
 
-public abstract class StackList implements MultiViewDatasetDefinition
+public abstract class StackList extends AbstractMultiViewDataset implements MultiViewDatasetDefinition
 {
 	final public static char TIMEPOINT_PATTERN = 't';
 	final public static char CHANNEL_PATTERN = 'c';
@@ -121,6 +121,9 @@ public abstract class StackList implements MultiViewDatasetDefinition
 	protected abstract boolean supportsMultipleChannelsPerFile();
 	protected abstract boolean supportsMultipleAnglesPerFile();
 	protected abstract boolean supportsMultipleIlluminationsPerFile();
+
+	// This field used in createDataset() after processing with queryDialog()
+	SpimData2 spimData = null;
 	
 	protected class Calibration
 	{
@@ -222,34 +225,6 @@ public abstract class StackList implements MultiViewDatasetDefinition
 		// collect all the information
 		if ( !queryInformation() )
 			return null;
-		
-		// assemble timepints, viewsetups, missingviews and the imgloader
-		final TimePoints timepoints = this.createTimePoints();
-		final ArrayList< ViewSetup > setups = this.createViewSetups();
-		final MissingViews missingViews = this.createMissingViews();
-		
-		// instantiate the sequencedescription
-		final SequenceDescription sequenceDescription = new SequenceDescription( timepoints, setups, null, missingViews );
-		final ImgLoader< UnsignedShortType > imgLoader = createAndInitImgLoader( ".", new File( directory ), imgFactory, sequenceDescription );
-		sequenceDescription.setImgLoader( imgLoader );
-
-		// get the minimal resolution of all calibrations
-		final double minResolution = Apply_Transformation.assembleAllMetaData(
-				sequenceDescription,
-				sequenceDescription.getViewDescriptions().values() );
-
-		IOFunctions.println( "Minimal resolution in all dimensions over all views is: " + minResolution );
-		IOFunctions.println( "(The smallest resolution in any dimension; the distance between two pixels in the output image will be that wide)" );
-		
-		// create the initial view registrations (they are all the identity transform)
-		final ViewRegistrations viewRegistrations = createViewRegistrations( sequenceDescription.getViewDescriptions(), minResolution );
-		
-		// create the initial view interest point object
-		final ViewInterestPoints viewInterestPoints = new ViewInterestPoints();
-		viewInterestPoints.createViewInterestPoints( sequenceDescription.getViewDescriptions() );
-
-		// finally create the SpimData itself based on the sequence description and the view registration
-		final SpimData2 spimData = new SpimData2( new File( directory ), sequenceDescription, viewRegistrations, viewInterestPoints, new BoundingBoxes() );
 
 		return spimData;
 	}
@@ -1035,6 +1010,70 @@ public abstract class StackList implements MultiViewDatasetDefinition
 
 	@Override public boolean queryDialog()
 	{
-		throw new NotImplementedException("StackList does not support headless operation.");
+		if (!super.queryDialog())
+			return false;
+
+		AbstractMultiViewDataset.Parameters params = new AbstractMultiViewDataset.Parameters();
+		params.setXmlFilename( defaultXMLName );
+
+		if(!queryInformation())
+			return false;
+
+		// Parameter generation from the query
+//		public static String defaultTimepoints = "18,19,30";
+//		public static String defaultChannels = "1,2";
+//		public static String defaultIlluminations = "0,1";
+//		public static String defaultAngles = "0-315:45";
+//
+//		protected String timepoints, channels, illuminations, angles;
+		//TODO: receive parameters from GUI
+		// In the process
+		// It uses all the protected variables of timepoints, channels, illuminations, angles
+
+		// Call process
+		process(params);
+
+		return true;
+	}
+
+	public void process(AbstractMultiViewDataset.Parameters params)
+	{
+		// assemble timepints, viewsetups, missingviews and the imgloader
+		final TimePoints timepoints = this.createTimePoints();
+		final ArrayList< ViewSetup > setups = this.createViewSetups();
+		final MissingViews missingViews = this.createMissingViews();
+
+		// instantiate the sequencedescription
+		final SequenceDescription sequenceDescription = new SequenceDescription( timepoints, setups, null, missingViews );
+		final ImgLoader< UnsignedShortType > imgLoader = createAndInitImgLoader( ".", new File( directory ), imgFactory, sequenceDescription );
+		sequenceDescription.setImgLoader( imgLoader );
+
+		// get the minimal resolution of all calibrations
+		final double minResolution = Apply_Transformation.assembleAllMetaData(
+				sequenceDescription,
+				sequenceDescription.getViewDescriptions().values() );
+
+		IOFunctions.println( "Minimal resolution in all dimensions over all views is: " + minResolution );
+		IOFunctions.println( "(The smallest resolution in any dimension; the distance between two pixels in the output image will be that wide)" );
+
+		// create the initial view registrations (they are all the identity transform)
+		final ViewRegistrations viewRegistrations = createViewRegistrations( sequenceDescription.getViewDescriptions(), minResolution );
+
+		// create the initial view interest point object
+		final ViewInterestPoints viewInterestPoints = new ViewInterestPoints();
+		viewInterestPoints.createViewInterestPoints( sequenceDescription.getViewDescriptions() );
+
+		// finally create the SpimData itself based on the sequence description and the view registration
+		spimData = new SpimData2( new File( directory ), sequenceDescription, viewRegistrations, viewInterestPoints, new BoundingBoxes() );
+
+		if ( spimData == null )
+		{
+			IOFunctions.println( "Defining multi-view dataset failed." );
+			return;
+		}
+		else
+		{
+			SpimData2.saveXML( spimData, params.getXmlFilename(), "" );
+		}
 	}
 }
