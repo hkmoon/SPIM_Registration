@@ -3,6 +3,7 @@ package spim.fiji.datasetmanager;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import spim.fiji.plugin.util.GUIHelper;
+import spim.fiji.spimdata.SpimData2;
 
 /**
  * Created by moon on 5/13/15.
@@ -10,6 +11,9 @@ import spim.fiji.plugin.util.GUIHelper;
 public abstract class AbstractMultiViewDataset implements MultiViewDatasetDefinition
 {
 	public String defaultXMLName = "dataset.xml";
+
+	// This field used in createDataset() after processing with queryDialog()
+	SpimData2 spimData;
 
 	public static class Parameters
 	{

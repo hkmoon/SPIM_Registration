@@ -43,7 +43,7 @@ import spim.fiji.spimdata.imgloaders.MicroManagerImgLoader;
 import spim.fiji.spimdata.imgloaders.MultipageTiffReader;
 import spim.fiji.spimdata.interestpoints.ViewInterestPoints;
 
-public class MicroManager implements MultiViewDatasetDefinition
+public class MicroManager extends AbstractMultiViewDataset
 {
 	public static String[] rotAxes = new String[] { "X-Axis", "Y-Axis", "Z-Axis" };
 
@@ -64,56 +64,8 @@ public class MicroManager implements MultiViewDatasetDefinition
 	@Override
 	public SpimData2 createDataset()
 	{
-		final File mmFile = queryMMFile();
-
-		MultipageTiffReader reader = null;
-
-		try
-		{
-			reader = new MultipageTiffReader( mmFile );
-		}
-		catch ( IOException e )
-		{
-			IOFunctions.println( "Failed to analyze file '" + mmFile.getAbsolutePath() + "': " + e );
+		if( !queryDialog() )
 			return null;
-		}
-
-		if ( !GraphicsEnvironment.isHeadless() && !showDialogs( reader ) )
-			return null;
-
-		final String directory = mmFile.getParent();
-		final ImgFactory< ? extends NativeType< ? > > imgFactory = new ArrayImgFactory< FloatType >();
-
-		// assemble timepints, viewsetups, missingviews and the imgloader
-		final TimePoints timepoints = this.createTimePoints( reader );
-		final ArrayList< ViewSetup > setups = this.createViewSetups( reader );
-		final MissingViews missingViews = null;
-
-		// instantiate the sequencedescription
-		final SequenceDescription sequenceDescription = new SequenceDescription( timepoints, setups, null, missingViews );
-		final ImgLoader< UnsignedShortType > imgLoader = new MicroManagerImgLoader( mmFile, imgFactory, sequenceDescription );
-		sequenceDescription.setImgLoader( imgLoader );
-
-		// get the minimal resolution of all calibrations
-		final double minResolution = Math.min( Math.min( reader.calX(), reader.calY() ), reader.calZ() );
-
-		IOFunctions.println( "Minimal resolution in all dimensions is: " + minResolution );
-		IOFunctions.println( "(The smallest resolution in any dimension; the distance between two pixels in the output image will be that wide)" );
-		
-		// create the initial view registrations (they are all the identity transform)
-		final ViewRegistrations viewRegistrations = StackList.createViewRegistrations( sequenceDescription.getViewDescriptions(), minResolution );
-		
-		// create the initial view interest point object
-		final ViewInterestPoints viewInterestPoints = new ViewInterestPoints();
-		viewInterestPoints.createViewInterestPoints( sequenceDescription.getViewDescriptions() );
-
-		// finally create the SpimData itself based on the sequence description and the view registration
-		final SpimData2 spimData = new SpimData2( new File( directory ), sequenceDescription, viewRegistrations, viewInterestPoints, new BoundingBoxes() );
-
-		if ( reader.applyAxis() )
-			applyAxis( spimData );
-
-		try { reader.close(); } catch (IOException e) { IOFunctions.println( "Could not close file '" + mmFile.getAbsolutePath() + "': " + e ); }
 
 		return spimData;
 	}
@@ -384,10 +336,105 @@ public class MicroManager implements MultiViewDatasetDefinition
 	@Override
 	public MicroManager newInstance() { return new MicroManager(); }
 
+	public static class Parameters extends AbstractMultiViewDataset.Parameters
+	{
+		private MultipageTiffReader metaData;
+
+		private File mmFile;
+
+		public MultipageTiffReader getMetaData()
+		{
+			return metaData;
+		}
+
+		public void setMetaData( MultipageTiffReader metaData )
+		{
+			this.metaData = metaData;
+		}
+
+		public File getmmFile()
+		{
+			return mmFile;
+		}
+
+		public void setmmFile( File mmFile )
+		{
+			this.mmFile = mmFile;
+		}
+	}
+
 	@Override
 	public boolean queryDialog()
 	{
+		if( !super.queryDialog() )
+			return false;
+
+		final File mmFile = queryMMFile();
+
+		MultipageTiffReader reader = null;
+
+		try
+		{
+			reader = new MultipageTiffReader( mmFile );
+		}
+		catch ( IOException e )
+		{
+			IOFunctions.println( "Failed to analyze file '" + mmFile.getAbsolutePath() + "': " + e );
+			return false;
+		}
+
+		Parameters params = new Parameters();
+		params.setXmlFilename( super.defaultXMLName );
+
+		if ( !showDialogs( reader ) )
+			return false;
+
+		params.setmmFile( mmFile );
+		params.setMetaData( reader );
+
+		process( params );
+
 		return false;
+	}
+
+	public void process(Parameters params)
+	{
+		final MultipageTiffReader reader = params.getMetaData();
+		final File mmFile = params.getmmFile();
+		final String directory = mmFile.getParent();
+		final ImgFactory< ? extends NativeType< ? > > imgFactory = new ArrayImgFactory< FloatType >();
+
+		// assemble timepints, viewsetups, missingviews and the imgloader
+		final TimePoints timepoints = this.createTimePoints( reader );
+		final ArrayList< ViewSetup > setups = this.createViewSetups( reader );
+		final MissingViews missingViews = null;
+
+		// instantiate the sequencedescription
+		final SequenceDescription sequenceDescription = new SequenceDescription( timepoints, setups, null, missingViews );
+		final ImgLoader< UnsignedShortType > imgLoader = new MicroManagerImgLoader( mmFile, imgFactory, sequenceDescription );
+		sequenceDescription.setImgLoader( imgLoader );
+
+		// get the minimal resolution of all calibrations
+		final double minResolution = Math.min( Math.min( reader.calX(), reader.calY() ), reader.calZ() );
+
+		IOFunctions.println( "Minimal resolution in all dimensions is: " + minResolution );
+		IOFunctions.println( "(The smallest resolution in any dimension; the distance between two pixels in the output image will be that wide)" );
+
+		// create the initial view registrations (they are all the identity transform)
+		final ViewRegistrations viewRegistrations = StackList.createViewRegistrations( sequenceDescription.getViewDescriptions(), minResolution );
+
+		// create the initial view interest point object
+		final ViewInterestPoints viewInterestPoints = new ViewInterestPoints();
+		viewInterestPoints.createViewInterestPoints( sequenceDescription.getViewDescriptions() );
+
+		// finally create the SpimData itself based on the sequence description and the view registration
+		spimData = new SpimData2( new File( directory ), sequenceDescription, viewRegistrations, viewInterestPoints, new BoundingBoxes() );
+
+		if ( reader.applyAxis() )
+			applyAxis( spimData );
+
+		try { reader.close(); } catch (IOException e) { IOFunctions.println( "Could not close file '" + mmFile.getAbsolutePath() + "': " + e ); }
+
 	}
 
 	public static void main( String[] args )

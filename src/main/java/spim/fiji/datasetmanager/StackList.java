@@ -50,7 +50,7 @@ import spim.fiji.spimdata.boundingbox.BoundingBoxes;
 import spim.fiji.spimdata.imgloaders.StackImgLoader;
 import spim.fiji.spimdata.interestpoints.ViewInterestPoints;
 
-public abstract class StackList extends AbstractMultiViewDataset implements MultiViewDatasetDefinition
+public abstract class StackList extends AbstractMultiViewDataset
 {
 	final public static char TIMEPOINT_PATTERN = 't';
 	final public static char CHANNEL_PATTERN = 'c';
@@ -121,9 +121,6 @@ public abstract class StackList extends AbstractMultiViewDataset implements Mult
 	protected abstract boolean supportsMultipleChannelsPerFile();
 	protected abstract boolean supportsMultipleAnglesPerFile();
 	protected abstract boolean supportsMultipleIlluminationsPerFile();
-
-	// This field used in createDataset() after processing with queryDialog()
-	SpimData2 spimData = null;
 	
 	protected class Calibration
 	{

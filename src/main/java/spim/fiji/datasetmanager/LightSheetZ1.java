@@ -44,7 +44,7 @@ import spim.fiji.spimdata.boundingbox.BoundingBoxes;
 import spim.fiji.spimdata.imgloaders.LightSheetZ1ImgLoader;
 import spim.fiji.spimdata.interestpoints.ViewInterestPoints;
 
-public class LightSheetZ1 extends AbstractMultiViewDataset implements MultiViewDatasetDefinition
+public class LightSheetZ1 extends AbstractMultiViewDataset
 {
 	private static final Logger LOG = LoggerFactory.getLogger( LightSheetZ1.class );
 

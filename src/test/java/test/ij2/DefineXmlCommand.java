@@ -20,7 +20,6 @@ public class DefineXmlCommand implements Command
 					"Image Stacks (ImageJ Opener)",
 					"MicroManager diSPIM Dataset",
 					"Zeiss Lightsheet Z.1 Dataset (LOCI Bioformats)"})
-
 	private String typeOfDataset;
 
 	@Parameter(label = "xml_filename")
