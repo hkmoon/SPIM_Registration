@@ -230,12 +230,11 @@ public class WeightedAverageFusion extends Fusion
 
 	/**
 	 * Creates one new Angle and one new Illumination for the fused dataset.
-	 * The size of the List< ViewSetup > is therefore equal to the number of channels
+	 * The size of the List&gt; ViewSetup &lt; is therefore equal to the number of channels
 	 * 
 	 * @param spimData
 	 * @param viewIdsToProcess
 	 * @param bb
-	 * @param newViewSetupName
 	 * @param newAngleName
 	 * @param newIlluminationName
 	 * @return
@@ -304,13 +303,11 @@ public class WeightedAverageFusion extends Fusion
 
 	/**
 	 * Duplicates all Angles and Illuminations that are processed.
-	 * The size of the List< ViewSetup > is therefore equal to 
+	 * The size of the List&gt; ViewSetup &lt; is therefore equal to
 	 * the number of channels * number of processed angles * number of processed illuminations
 	 * 
 	 * @param spimData
-	 * @param channelsToProcess
-	 * @param illumsToProcess
-	 * @param anglesToProcess
+	 * @param viewIdsToProcess
 	 * @param bb
 	 * @return
 	 */

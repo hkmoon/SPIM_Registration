@@ -35,9 +35,8 @@ public class ReferenceTimepointRegistration extends GlobalOptimizationType
 	 * All tiles of the reference timepoint are fixed, nothing else
 	 * 
 	 * @param spimData
-	 * @param anglesToProcess
+	 * @param viewIdsToProcess
 	 * @param channelsToProcess
-	 * @param illumsToProcess
 	 * @param referenceTimepoint
 	 * @return
 	 */
@@ -54,7 +53,9 @@ public class ReferenceTimepointRegistration extends GlobalOptimizationType
 			if ( !vd.isPresent() )
 				continue;
 
-			fixedTiles.add( vd );
+			for ( final ChannelProcess cp : channelsToProcess )
+				if ( cp.getChannel().getId() == vd.getViewSetup().getChannel().getId() )
+					fixedTiles.add( vd );
 		}
 
 		return fixedTiles;
@@ -87,10 +88,17 @@ public class ReferenceTimepointRegistration extends GlobalOptimizationType
 			{
 				final ViewId viewIdA = views.get( a );
 				final MatchPointList listA = pointListsTimepoint.get( viewIdA );
-				
+
+				if ( !isValid( viewIdA, listA ) )
+					continue;
+
 				for ( final ViewId viewIdB : fixedTiles )
 				{
 					final MatchPointList listB = pointListsReferenceTimepoint.get( viewIdB );
+
+					if ( !isValid( viewIdB, listB ) )
+						continue;
+
 					viewPairs.add( new PairwiseMatch( viewIdA, viewIdB, listA, listB ) );
 				}
 			}
@@ -104,10 +112,16 @@ public class ReferenceTimepointRegistration extends GlobalOptimizationType
 					{
 						final ViewId viewIdA = views.get( a );
 						final ViewId viewIdB = views.get( b );
-						
+
 						final MatchPointList listA = pointListsTimepoint.get( viewIdA );
 						final MatchPointList listB = pointListsTimepoint.get( viewIdB );
-						
+
+						if ( !isValid( viewIdA, listA ) )
+							continue;
+
+						if ( !isValid( viewIdB, listB ) )
+							continue;
+
 						viewPairs.add( new PairwiseMatch( viewIdA, viewIdB, listA, listB ) );
 					}
 			}

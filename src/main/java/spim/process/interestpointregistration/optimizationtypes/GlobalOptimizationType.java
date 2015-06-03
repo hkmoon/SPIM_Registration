@@ -152,7 +152,7 @@ public abstract class GlobalOptimizationType
 	/**
 	 * Creates lists of input points for the registration, based on the current transformation of the views
 	 * 
-	 * Note: this always duplicates the location array from the input List< InterestPoint > !!!
+	 * Note: this always duplicates the location array from the input List&gt; InterestPoint &lt; !!!
 	 * 
 	 * @param timepoint
 	 */
@@ -232,7 +232,7 @@ public abstract class GlobalOptimizationType
 	/**
 	 * Add all correspondences the list for those that are compared here
 	 * 
-	 * This method can be overwritten if saving, adding & clearing of correspondences is different for a certain type of registration
+	 * This method can be overwritten if saving, adding &amp; clearing of correspondences is different for a certain type of registration
 	 * 
 	 * @param pairs
 	 */
@@ -280,7 +280,7 @@ public abstract class GlobalOptimizationType
 	/**
 	 * Save all lists of existing correspondences for those that are compared here
 	 * 
-	 * This method can be overwritten if saving, adding & clearing of correspondences is different for a certain type of registration
+	 * This method can be overwritten if saving, adding &amp; clearing of correspondences is different for a certain type of registration
 	 *
 	 * @param set
 	 */
@@ -295,7 +295,7 @@ public abstract class GlobalOptimizationType
 	/**
 	 * Clear all lists of existing correspondences for those that are compared here
 	 * 
-	 * This method can be overwritten if saving, adding & clearing of correspondences is different for a certain type of registration
+	 * This method can be overwritten if saving, adding &amp; clearing of correspondences is different for a certain type of registration
 	 *
 	 * @param set
 	 */
@@ -305,5 +305,18 @@ public abstract class GlobalOptimizationType
 			for ( final ChannelProcess c : channelsToProcess )
 				if ( spimData.getSequenceDescription().getViewDescription( id ).getViewSetup().getChannel().getId() == c.getChannel().getId() )
 					spimData.getViewInterestPoints().getViewInterestPointLists( id ).getInterestPointList( c.getLabel() ).setCorrespondingInterestPoints( new ArrayList< CorrespondingInterestPoints>() );
+	}
+
+	protected static boolean isValid( final ViewId viewId, final MatchPointList list )
+	{
+		if ( list == null )
+		{
+			IOFunctions.println( "Interest points NOT found for timepoint=" + viewId.getTimePointId() + ", viewsetup=" + viewId.getViewSetupId() );
+			return false;
+		}
+		else
+		{
+			return true;
+		}
 	}
 }

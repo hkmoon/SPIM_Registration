@@ -1070,7 +1070,7 @@ public class EfficientBayesianBased extends Fusion
 				{
 					final ViewDescription vd = spimData.getSequenceDescription().getViewDescription( viewId ); 
 					
-					if ( vd.isPresent() )
+					if ( vd.getViewSetup().getChannel().getId() == c.getId() && vd.isPresent() )
 					{
 						// how many views with correspondences should be there
 						++countViews;
